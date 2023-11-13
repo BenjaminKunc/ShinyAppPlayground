@@ -5,8 +5,8 @@ ui <- fluidPage(
   titlePanel("Modelling!"),
   sidebarLayout(
     sidebarPanel(selectInput("model", "Select a model",
-                 choices = c("normal", "multilevel"),
-                 selected = "normal")
+                 choices = c("between groups", "within groups"),
+                 selected = "between groups")
   ),
   mainPanel(plotOutput("model"),
             verbatimTextOutput("coefficients")
@@ -15,7 +15,7 @@ ui <- fluidPage(
 
 server <- function (input, output) {
   output$model <- renderPlot({
-    if(input$model == "normal") {
+    if(input$model == "between groups") {
       m <- lm(Sepal.Length ~ Petal.Length, iris)
       ggplot(iris, (aes(x=Petal.Length, y=Sepal.Length))) + 
         geom_point(shape=20) + 
@@ -23,21 +23,20 @@ server <- function (input, output) {
         theme(legend.position="none")+
         theme_minimal()
     } else {
-      m <- lme4::lmer(Sepal.Length ~ Petal.Length + 1|Species, iris)
+      m <- lme4::lmer(Sepal.Length ~ Petal.Length + Petal.Length|Species, iris)
       ggplot(iris, aes(x=Petal.Length, y=Sepal.Length, color=Species)) + 
         geom_point(shape=20) + 
         geom_smooth(method=lm) + 
         theme(legend.position="none")+
-       # geom_abline(slope=coef(m)$Species[,1], intercept=coef(m)$Species[,2])+
         theme_minimal()
     }
   })
   output$coefficients <- renderPrint({
-    if (input$model == "normal") {
+    if (input$model == "between groups") {
       m <- lm(Sepal.Length ~ Petal.Length, iris)
       coef(m)
     } else {
-      m <- lme4::lmer(Sepal.Length ~ Petal.Length + 1| Species, data = iris)
+      m <- lme4::lmer(Sepal.Length ~ Petal.Length + Petal.Length| Species, data = iris)
       coef(m)$Species
     }
   })
